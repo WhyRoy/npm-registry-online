@@ -5,3 +5,17 @@ services:
     build: .
     ports: 
       - "80:3000"
+    volumes:
+      - verdaccio-data:/verdaccio/storage/data
+      - git-repo:/verdaccio/storage/.git
+      - patchs:/patches
+  verdaccio:
+    image: verdaccio/verdaccio
+    user: root
+    volumes:
+      - verdaccio-data:/verdaccio/storage/data
+
+volumes:
+  verdaccio-data:
+  git-repo:
+  patchs:
