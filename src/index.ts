@@ -1,10 +1,13 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import express from 'express'
+import generate_patch from './generate_patch';
 
 const prisma = new PrismaClient()
 const app = express()
 
 app.use(express.json())
+
+app.use(express.static('public'))
 
 app.post(`/signup`, async (req, res) => {
   const { name, email, posts } = req.body
@@ -143,6 +146,15 @@ app.get('/feed', async (req, res) => {
   })
 
   res.json(posts)
+})
+
+app.get(`/download`, (req, res) => {
+  const { packages } = req.query || {}
+  const patch_name = generate_patch(packages as string)
+  process.chdir('/verdaccio/storage')
+  res.download(`./${patch_name}`, function (err) {
+    if (err) res.json({ err: 'download error' });
+  });
 })
 
 const server = app.listen(3000, () =>

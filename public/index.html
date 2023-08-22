@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <form id="form">
+    <input type="text" id="keywords" />
+    <input type="button" id="button" value="下载" />
+  </form>
+  <script src="./jquery.min.js"></script>
+
+  <script type="module">
+    const form = document.querySelector('#form')
+    const keywords = document.querySelector("#keywords")
+    const button = document.querySelector("#button")
+    button.addEventListener('click', () => {
+      sendData();
+    })
+
+
+    function sendData(data) {
+      window.open(`/download?packages=${keywords.value}`, '_blank')
+      /* $.ajax(`/download?packages=${keywords.value}`, {
+        method: 'GET',
+        contentType: 'application/json',
+        success() {
+        }
+      }) */
+    }
+
+  </script>
+</body>
+
+</html>
