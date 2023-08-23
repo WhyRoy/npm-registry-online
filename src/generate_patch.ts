@@ -16,6 +16,8 @@ export default function (packages = "") {
   execSync("ls -l");
   execSync("rm -rf ./*");
   process.chdir("/verdaccio/storage");
+
+  // in case git repository not inited
   execSync("git init");
   execSync("git add .");
   execSync("git config user.email root@163.com");
