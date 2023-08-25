@@ -1,164 +1,84 @@
-import { Prisma, PrismaClient } from '@prisma/client'
-import express from 'express'
-import generate_patch from './generate_patch';
+import express from "express"
+import {
+  InputType,
+  generateNewPatch,
+  generateOldPackagesPatch,
+  clearOldPackages
+} from "./actions"
+import multer from "multer"
+import fs from "fs"
 
-const prisma = new PrismaClient()
 const app = express()
+
+const tmpDir = "/temp"
+const patchDir = "/patches"
+
+try {
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir)
+  }
+
+  if (!fs.existsSync(patchDir)) {
+    fs.mkdirSync(patchDir)
+  }
+} catch (error) {
+  console.log(error)
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, tmpDir)
+  },
+  filename: (req, file, cb) => {
+    cb(null, "package.json")
+  }
+})
 
 app.use(express.json())
 
-app.use(express.static('public'))
+app.use(express.static("public"))
 
-app.post(`/signup`, async (req, res) => {
-  const { name, email, posts } = req.body
+app.post(
+  `/download`,
+  multer({ storage }).single("package-file"),
+  (req, res) => {
+    const inputType = req.body["input-type"] as InputType
+    const packageNames = (req.body["package-names"] ?? "") as string
 
-  const postData = posts?.map((post: Prisma.PostCreateInput) => {
-    return { title: post?.title, content: post?.content }
-  })
-
-  const result = await prisma.user.create({
-    data: {
-      name,
-      email,
-      posts: {
-        create: postData,
-      },
-    },
-  })
-  res.json(result)
-})
-
-app.post(`/post`, async (req, res) => {
-  const { title, content, authorEmail } = req.body
-  const result = await prisma.post.create({
-    data: {
-      title,
-      content,
-      author: { connect: { email: authorEmail } },
-    },
-  })
-  res.json(result)
-})
-
-app.put('/post/:id/views', async (req, res) => {
-  const { id } = req.params
-
-  try {
-    const post = await prisma.post.update({
-      where: { id: Number(id) },
-      data: {
-        viewCount: {
-          increment: 1,
-        },
-      },
-    })
-
-    res.json(post)
-  } catch (error) {
-    res.json({ error: `Post with ID ${id} does not exist in the database` })
+    if (
+      inputType === "names" ||
+      inputType === "file" ||
+      inputType === "squash"
+    ) {
+      const patch_name =
+        inputType === "squash"
+          ? generateOldPackagesPatch({
+              patchDir
+            })
+          : generateNewPatch({
+              inputType,
+              packageNames,
+              tmpDir,
+              patchDir
+          })
+      res.download(patch_name)
+      return
+    } else {
+      res.json({ error: "Invalid input type" })
+      return
+    }
   }
-})
+)
 
-app.put('/publish/:id', async (req, res) => {
-  const { id } = req.params
-
-  try {
-    const postData = await prisma.post.findUnique({
-      where: { id: Number(id) },
-      select: {
-        published: true,
-      },
-    })
-
-    const updatedPost = await prisma.post.update({
-      where: { id: Number(id) || undefined },
-      data: { published: !postData?.published },
-    })
-    res.json(updatedPost)
-  } catch (error) {
-    res.json({ error: `Post with ID ${id} does not exist in the database` })
-  }
-})
-
-app.delete(`/post/:id`, async (req, res) => {
-  const { id } = req.params
-  const post = await prisma.post.delete({
-    where: {
-      id: Number(id),
-    },
+app.get("/clear", (_, res) => {
+  clearOldPackages()
+  res.json({
+    success: "Old packages cleared"
   })
-  res.json(post)
-})
-
-app.get('/users', async (req, res) => {
-  const users = await prisma.user.findMany()
-  res.json(users)
-})
-
-app.get('/user/:id/drafts', async (req, res) => {
-  const { id } = req.params
-
-  const drafts = await prisma.user
-    .findUnique({
-      where: {
-        id: Number(id),
-      },
-    })
-    .posts({
-      where: { published: false },
-    })
-
-  res.json(drafts)
-})
-
-app.get(`/post/:id`, async (req, res) => {
-  const { id }: { id?: string } = req.params
-
-  const post = await prisma.post.findUnique({
-    where: { id: Number(id) },
-  })
-  res.json(post)
-})
-
-app.get('/feed', async (req, res) => {
-  const { searchString, skip, take, orderBy } = req.query
-
-  const or: Prisma.PostWhereInput = searchString
-    ? {
-        OR: [
-          { title: { contains: searchString as string } },
-          { content: { contains: searchString as string } },
-        ],
-      }
-    : {}
-
-  const posts = await prisma.post.findMany({
-    where: {
-      published: true,
-      ...or,
-    },
-    include: { author: true },
-    take: Number(take) || undefined,
-    skip: Number(skip) || undefined,
-    orderBy: {
-      updatedAt: orderBy as Prisma.SortOrder,
-    },
-  })
-
-  res.json(posts)
-})
-
-app.get(`/download`, (req, res) => {
-  const { packages } = req.query || {}
-  const patch_name = generate_patch(packages as string)
-  process.chdir('/verdaccio/storage')
-  res.download(`./${patch_name}`, function (err) {
-    if (err) res.json({ err: 'download error' });
-  });
 })
 
 const server = app.listen(3000, () =>
   console.log(`
 🚀 Server ready at: http://localhost:3000
-⭐️ See sample requests: http://pris.ly/e/ts/rest-express#3-using-the-rest-api`),
+`)
 )

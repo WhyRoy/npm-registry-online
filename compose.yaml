@@ -3,6 +3,9 @@ version: "3.8"
 services: 
   web:
     build: .
+    depends_on:
+      - verdaccio
+    user: root
     ports: 
       - "80:3000"
     volumes:
@@ -14,6 +17,7 @@ services:
     user: root
     volumes:
       - verdaccio-data:/verdaccio/storage/data
+      - ./verdaccio/conf/config.yaml:/verdaccio/conf/config.yaml
 
 volumes:
   verdaccio-data:

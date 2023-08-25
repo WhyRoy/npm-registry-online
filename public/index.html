@@ -1,39 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
+  <body>
+    <form action="/download" method="post" enctype="multipart/form-data">
+      <p>
+        <input type="radio" id="bynames" name="input-type" value="names" />
+        <label for="bynames">输入包名称</label>
+      </p>
+      <p>
+        <input type="radio" id="byfile" name="input-type" value="file" />
+        <label for="byfile">上传package.json</label>
+      </p>
+      <p>
+        <input type="radio" id="bysquash" name="input-type" value="squash" />
+        <label for="bysquash">打包之前所有</label>
+      </p>
+      <p id="line-names">
+        <label for="names">包名称（多个包用空格隔开）：</label>
+        <input type="text" id="names" name="package-names" />
+      </p>
+      <p id="line-file">
+        <label for="file">上传package.json：</label>
+        <input type="file" id="file" name="package-file" accept=".json" />
+      </p>
+      <input type="submit" id="button" value="下载npm registry更新文件" />
+    </form>
+    <script>
+      const button = document.getElementById("button")
+      const bynames = document.getElementById("bynames")
+      const byfile = document.getElementById("byfile")
+      const bysquash = document.getElementById("bysquash")
+      const line_names = document.getElementById("line-names")
+      const names = document.getElementById("names")
+      const line_file = document.getElementById("line-file")
+      const file = document.getElementById("file")
 
-<body>
-  <form id="form">
-    <input type="text" id="keywords" />
-    <input type="button" id="button" value="下载" />
-  </form>
-  <script src="./jquery.min.js"></script>
+      function changeMethod(method) {
+        names.disabled = method !== "names"
+        line_names.style.display = method === "names" ? "block" : "none"
+        file.disabled = method !== "file"
+        line_file.style.display = method === "file" ? "block" : "none"
+      }
 
-  <script type="module">
-    const form = document.querySelector('#form')
-    const keywords = document.querySelector("#keywords")
-    const button = document.querySelector("#button")
-    button.addEventListener('click', () => {
-      sendData();
-    })
+      bynames.addEventListener("click", () => {
+        changeMethod("names")
+      })
 
+      byfile.addEventListener("click", () => {
+        changeMethod("file")
+      })
 
-    function sendData(data) {
-      window.open(`/download?packages=${keywords.value}`, '_blank')
-      /* $.ajax(`/download?packages=${keywords.value}`, {
-        method: 'GET',
-        contentType: 'application/json',
-        success() {
-        }
-      }) */
-    }
+      bysquash.addEventListener("click", () => {
+        changeMethod("squash")
+      })
 
-  </script>
-</body>
+      bynames.click()
 
+      window.onload = () => {
+        bynames.checked = true
+      }
+    </script>
+  </body>
 </html>

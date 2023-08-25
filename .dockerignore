@@ -1,2 +1,7 @@
-node_modules
 .git
+
+node_modules/
+dist/
+*.env*
+temp/
+tmp/
