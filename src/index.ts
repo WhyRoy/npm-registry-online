@@ -8,6 +8,8 @@ import {
 import multer from "multer"
 import fs from "fs"
 
+const PORT = process.env.PORT_ADMIN || 3000
+
 const app = express()
 
 const tmpDir = "/temp"
@@ -77,8 +79,8 @@ app.get("/clear", (_, res) => {
   })
 })
 
-const server = app.listen(3000, () =>
+const server = app.listen(PORT, () =>
   console.log(`
-🚀 Server ready at: http://localhost:3000
+🚀 Server ready at: http://localhost:${PORT}
 `)
 )

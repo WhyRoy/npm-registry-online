@@ -45,8 +45,8 @@ export function generateNewPatch({
 
   const patchBaseName =
     packageNames !== ""
-      ? `${packageNames.split(" ").join("_")}_${patchNameId}.patch`
-      : `${patchNameId}.patch`
+      ? `${packageNames.replace("/", "-").split(" ").join("_")}_${patchNameId}.patch`
+      : `package_json_${patchNameId}.patch`
   const patchName = execSync(`git format-patch -1 -o ${patchDir}`)
     .toString()
     .trim()
@@ -83,6 +83,5 @@ export function clearOldPackages() {
   process.chdir("/verdaccio/storage")
   execSync("rm -rf ./.git/*")
   execSync("git init")
-  execSync("git clean -f")
   execSync("rm -rf ./data/*")
 }

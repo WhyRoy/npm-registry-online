@@ -7,11 +7,14 @@ services:
       - verdaccio
     user: root
     ports: 
-      - "80:3000"
+      - "${PORT_ADMIN}:${PORT_ADMIN}"
     volumes:
       - verdaccio-data:/verdaccio/storage/data
       - git-repo:/verdaccio/storage/.git
-      - patchs:/patches
+      - ./verdaccio/storage/.gitignore:/verdaccio/storage/.gitignore
+      - patches:/patches
+    environment:
+      - PORT_ADMIN
   verdaccio:
     image: verdaccio/verdaccio
     user: root
@@ -22,4 +25,4 @@ services:
 volumes:
   verdaccio-data:
   git-repo:
-  patchs:
+  patches:

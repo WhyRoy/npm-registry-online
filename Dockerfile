@@ -10,7 +10,7 @@ COPY package.json package-lock.json /app/
 
 RUN cd /app && npm install
 
-COPY . /app
+COPY . /app/
 
 EXPOSE 3000
 
