@@ -15,62 +15,67 @@ export function generateNewPatch({
   tmpDir: string
   patchDir: string
 }) {
+  execSync(`rm -rf ${patchDir}/*`)
+  
   process.chdir(tmpDir)
   if (inputType === "names") {
     execSync(`npm install ${packageNames} --registry=http://verdaccio:4873`)
   } else {
     execSync(`npm install --registry=http://verdaccio:4873`)
   }
-
-  execSync("sleep 5")
-
+  execSync("sleep 1")
+  
   execSync("rm -rf ./*")
-
+  
   process.chdir("/verdaccio/storage")
   // in case git repository not inited
   execSync("git init")
   execSync("git config user.email root@163.com")
   execSync("git config user.name root")
   execSync("git add .")
-
-  if (inputType === "names") {
-    execSync(`git commit -m "chore(update packages): ${packageNames} added"`)
-  } else {
-    execSync(
-      `git commit -m "chore(update packages): add packages from package.json"`
-    )
-  }
-
+  
+  try {
+    if (inputType === "names") {
+      execSync(`git commit -m "chore(update packages): ${packageNames} added"`)
+    } else {
+      execSync(
+        `git commit -m "chore(update packages): add packages from package.json"`
+      )
+    }
+  } catch {}
+  
   const patchNameId = nanoid(8)
-
+  
   const patchBaseName =
-    packageNames !== ""
-      ? `${packageNames.replace("/", "-").split(" ").join("_")}_${patchNameId}.patch`
-      : `package_json_${patchNameId}.patch`
+  packageNames !== ""
+  ? `${packageNames.replace("/", "-").split(" ").join("_")}_${patchNameId}.patch`
+  : `package_json_${patchNameId}.patch`
   const patchName = execSync(`git format-patch -1 -o ${patchDir}`)
-    .toString()
-    .trim()
-
+  .toString()
+  .trim()
+  
   const patchNewName = path.join(patchDir, patchBaseName)
   execSync(`mv ${patchName} ${patchNewName}`)
-
+  
   return patchNewName
 }
 
 export function generateOldPackagesPatch({ patchDir }: { patchDir: string }) {
+  execSync(`rm -rf ${patchDir}/*`)
+  
   process.chdir("/verdaccio/storage")
   const sha = execSync(
     'git commit-tree HEAD^{tree} -m "all old packages"'
-  ).toString()
-  if (/^fatal/.test(sha)) {
-    throw new Error(sha)
-  }
-  const patchName = execSync(`git format-patch -1 -o ${patchDir} ${sha}`)
+    ).toString()
+    if (/^fatal/.test(sha)) {
+      throw new Error(sha)
+    }
+    const patchName = execSync(`git format-patch -1 -o ${patchDir} ${sha}`)
     .toString()
     .trim()
-
-  const patchNameId = nanoid(8)
-  const patchBaseName = `allOldPackages_${patchNameId}.patch`
+    
+    const patchNameId = nanoid(8)
+    const patchBaseName = `allOldPackages_${patchNameId}.patch`
   
   const patchNewName = path.join(patchDir, patchBaseName)
   execSync(`mv ${patchName} ${patchNewName}`)

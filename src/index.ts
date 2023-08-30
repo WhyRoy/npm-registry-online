@@ -44,6 +44,12 @@ app.post(
   `/download`,
   multer({ storage }).single("package-file"),
   (req, res) => {
+    const WaitTime = 1800
+
+    res.setTimeout(WaitTime * 1000, () => {
+      console.log(`waiting ${WaitTime} seconds, timeout`)
+    })
+
     const inputType = req.body["input-type"] as InputType
     const packageNames = (req.body["package-names"] ?? "") as string
 
@@ -63,7 +69,9 @@ app.post(
               tmpDir,
               patchDir
           })
+      console.log(`begin to download ${patch_name}`)
       res.download(patch_name)
+      console.log(`finish download ${patch_name}`)
       return
     } else {
       res.json({ error: "Invalid input type" })
@@ -84,3 +92,11 @@ const server = app.listen(PORT, () =>
 🚀 Server ready at: http://localhost:${PORT}
 `)
 )
+
+process.on("SIGINT", () => {
+  server.close()
+})
+
+process.on("SIGTERM", () => {
+  server.close()
+})
