@@ -1,4 +1,7 @@
 import express from "express"
+/**
+ * 我认为这里是钩子
+ */
 import {
   InputType,
   generateNewPatch,
@@ -8,7 +11,7 @@ import {
 import multer from "multer"
 import fs from "fs"
 
-const PORT = process.env.PORT_ADMIN || 3000
+const PORT = process.env.PORT_ADMIN || 3001
 
 const app = express()
 
@@ -16,6 +19,9 @@ const tmpDir = "/temp"
 const patchDir = "/patches"
 
 try {
+  /**
+   * if temDir not exist, then make it
+   */
   if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir)
   }
